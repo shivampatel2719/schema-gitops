@@ -2578,7 +2578,6 @@ CREATE TABLE `mobilesite` (
   `disclaimerFooter` varchar(1000) DEFAULT NULL,
   `status` tinyint(4) DEFAULT NULL,
   `hideAdditionalLocations` tinyint(4) DEFAULT '0',
-  `createdDate` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updatedDate` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `del` tinyint(4) DEFAULT '0',
   `locationType` tinyint(4) DEFAULT '0',
