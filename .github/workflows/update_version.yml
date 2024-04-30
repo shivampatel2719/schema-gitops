@@ -1,0 +1,52 @@
+name: Rename Files on PR Merge
+
+on:
+  pull_request:
+    branches:
+      - main
+    types:
+      - closed
+
+jobs:
+  rename_files:
+    if: github.event.pull_request.merged == true  # Only run for merged PRs
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Get list of changed files
+        id: changed_files
+        run: |
+          git fetch origin +refs/pull/${{ github.event.pull_request.number }}/merge
+          git diff --name-only HEAD...FETCH_HEAD > changed_files.txt
+
+      - name: Process changed files
+        run: |
+          while IFS= read -r filename; do
+            if [[ $filename =~ ^[0-9]+_.*\.sql$ ]]; then
+              # Extract the version number from the filename
+              version=$(echo "$filename" | sed -E 's/^([0-9]+)_.*\.sql$/\1/')
+
+              # Increment the version number for the new filename
+              new_version=$((version + 1))
+
+              # Rename the file
+              new_filename="${new_version}_$(echo "$filename" | sed -E 's/^[0-9]+_(.*)\.sql$/\1/')"
+              mv "$filename" "$new_filename"
+
+              # Stage the renamed file
+              git add "$new_filename"
+
+              # Remove the old file from the staging area and working directory
+              git rm --cached "$filename"
+              rm "$filename"
+            fi
+          done < changed_files.txt
+
+          # Commit and push the changes
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git commit -m "Rename files affected by PR merge" --no-verify
+          git push
